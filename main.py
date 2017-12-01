@@ -32,14 +32,7 @@ class Profile:
         usb.util.claim_interface(dev, 1)
         dev.set_interface_altsetting(interface=1, alternate_setting=0)
 
-
-        # bri = 0x03  # Brightness = 1, 2, 3
-        # mod = 0x01  # Mode: Continued, Breathing, Colourful = 1, 2, 3
-        # spe = 0x09  # Speed: Slow, Normal, Fast = 9, 7, 1
-        # dpl = 0x01  # DPI Display: Standard, Scan, Thunderbolt = 1, 2, 3
-
-        print(self.dpl)
-
+        # prepare data block
         data = [0x03, 0x06, 0xbb, 0xaa,
                 0x2a, 0x00, 0x0a, 0x00, self.mod, self.bri, self.spe, self.r, self.g, self.b, self.dpl, 0x01, 0x01, 0x00, 0x8f, 0x00,
                 0x60, 0x91, 0x8f, 0x00, 0x58, 0x91, 0x8f, 0x00, 0x3c, 0x91, 0x8f, 0x00, 0x90, 0x91, 0x8f, 0x00,
@@ -56,8 +49,6 @@ class Profile:
 
     def reset(self):
 
-        print("Finding device...")
-
         # find the device
         dev = usb.core.find(idVendor=0x258A, idProduct=0x0012)
 
@@ -66,7 +57,7 @@ class Profile:
         usb.util.claim_interface(dev, 1)
         dev.set_interface_altsetting(interface=1, alternate_setting=0)
 
-
+        # Reset data command block
         data = [0x02, 0x03, 0xbb, 0xaa, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
 
         # send the data to the mouse
@@ -90,7 +81,6 @@ class GridWindow(Gtk.Window):
         grid = Gtk.Grid(row_spacing=10, column_spacing=5)
 
         box = Gtk.Box()
-
         box.add(grid)
 
         self.add(box)
@@ -101,10 +91,6 @@ class GridWindow(Gtk.Window):
 
         label1 = Gtk.Label()
         label1.set_text("Light Mode ")
-        label1.set_justify(Gtk.Justification.LEFT)
-        # button2 = Gtk.Button(label="Static")
-        # button3 = Gtk.Button(label=" Pulsing ")
-        # button4 = Gtk.Button(label="Multi-Colour")
 
         radio1 = Gtk.RadioButton.new_with_label_from_widget(None, "Static")
         radio1.connect("toggled", self.toggle_light_mode, "1")
@@ -117,13 +103,8 @@ class GridWindow(Gtk.Window):
         radio3.set_label("Multi-Colour")
         radio3.connect("toggled", self.toggle_light_mode, "3")
 
-
         label2 = Gtk.Label()
         label2.set_text("Brightness ")
-        label2.set_justify(Gtk.Justification.LEFT)
-        # button5 = Gtk.Button(label="Dim")
-        # button6 = Gtk.Button(label="Normal")
-        # button7 = Gtk.Button(label="Bright")
 
         radio4 = Gtk.RadioButton.new_with_label_from_widget(None, "Dim")
         radio4.connect("toggled", self.toggle_light_lumi, "1")
@@ -138,10 +119,6 @@ class GridWindow(Gtk.Window):
 
         label3 = Gtk.Label()
         label3.set_text("Pulse Speed ")
-        label3.set_justify(Gtk.Justification.LEFT)
-        # button8 = Gtk.Button(label="Slow")
-        # button9 = Gtk.Button(label="Normal")
-        # button10 = Gtk.Button(label="Fast")
 
         radio7 = Gtk.RadioButton.new_with_label_from_widget(None, "Slow")
         radio7.connect("toggled", self.toggle_light_speed, "1")
@@ -157,9 +134,6 @@ class GridWindow(Gtk.Window):
         label4 = Gtk.Label()
         label4.set_text("DPI Display  ")
         label4.set_justify(Gtk.Justification.LEFT)
-        # button11 = Gtk.Button(label="Standard")
-        # button12 = Gtk.Button(label="Scan")
-        # button13 = Gtk.Button(label="Thunberbolt")
 
         radio10 = Gtk.RadioButton.new_with_label_from_widget(None, "Standard")
         radio10.connect("toggled", self.toggle_light_dpi, "1")
@@ -171,7 +145,6 @@ class GridWindow(Gtk.Window):
         radio12 = Gtk.RadioButton.new_from_widget(radio11)
         radio12.set_label("Thunberbolt")
         radio12.connect("toggled", self.toggle_light_dpi, "3")
-
 
         button_set_colour = Gtk.Button(label="Apply")
 
@@ -270,10 +243,8 @@ class GridWindow(Gtk.Window):
         profile.r = int(c.red * 255)
         profile.g = int(c.green * 255)
         profile.b = int(c.blue * 255)
-        print(profile.r)
-        print(profile.g)
-        print(profile.b)
         profile.set_lights()
+
 
 win = GridWindow()
 win.connect("delete-event", Gtk.main_quit)
