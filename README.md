@@ -3,7 +3,7 @@ ___
 
 Not thoroughly tested. Use at your own risk.
 
-Currently can set colour, pulse mode and pulse speed.
+Currently can set colour, pulse mode, pulse speed and DPI.
 
 
 Requires: `python-pyusb` and GTK3
