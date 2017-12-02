@@ -19,6 +19,33 @@ class Profile:
         self.spe = 0x07  # Speed: Slow, Normal, Fast = 9, 7, 1
         self.dpl = 0x02  # DPI Display: Standard, Scan, Thunderbolt = 1, 2, 3
 
+    def set_dpi(self, value, name):
+
+        value = max(50, value)
+        value = int(value / 7200 * 144)
+        value = min(value, 144)
+
+        print("Finding device...")
+
+        # find the device
+        dev = usb.core.find(idVendor=0x258A, idProduct=0x0012)
+
+        # detach the kernel driver
+        dev.detach_kernel_driver(1)
+        usb.util.claim_interface(dev, 1)
+        dev.set_interface_altsetting(interface=1, alternate_setting=0)
+
+        # prepare data block
+        data = [0x02, 0x06, 0xbb, 0xaa, 50 + name, 0x00, 0x08, 0x00, 0x01, value, 0x00, value, 0x00, 0xff, 0xff, 0xff]
+
+        # send the data to the mouse
+        dev.ctrl_transfer(bmRequestType=0x21, bRequest=0x09, wValue=0x0302, wIndex=0x0001, data_or_wLength=data,
+                          timeout=1000)
+
+        # reclaim the device
+        usb.util.release_interface(dev, 1)
+        dev.attach_kernel_driver(1)
+
 
     def set_lights(self):
 
@@ -148,7 +175,7 @@ class GridWindow(Gtk.Window):
 
         button_set_colour = Gtk.Button(label="Apply")
 
-        grid.attach(button1, 0, 10, 1, 1)
+        grid.attach(button1, 0, 20, 1, 1)
         grid.attach(button_set_colour, 10, 10, 1, 1)
 
         grid.attach(label1, 0, 0, 1, 1)
@@ -179,6 +206,38 @@ class GridWindow(Gtk.Window):
 
         button_set_colour.connect("clicked", self.set_colour)
 
+        dp1a = Gtk.Adjustment(1000, 50, 7200, 1, 10, 0)
+        dp1 = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=dp1a)
+        dp1.set_value(1000)
+        Gtk.Scale.set_digits(dp1, 0)
+        dp1.connect('button-release-event', self.set_dpi, "1")
+        grid.attach(dp1, 1, 11, 3, 1)
+        self.dp1 = dp1
+
+        dp1a = Gtk.Adjustment(1000, 50, 7200, 1, 10, 0)
+        dp1 = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=dp1a)
+        dp1.set_value(2000)
+        Gtk.Scale.set_digits(dp1, 0)
+        dp1.connect('button-release-event', self.set_dpi, "2")
+        grid.attach(dp1, 1, 12, 3, 1)
+        self.dp2 = dp1
+
+        dp1a = Gtk.Adjustment(1000, 50, 7200, 1, 10, 0)
+        dp1 = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=dp1a)
+        dp1.set_value(3600)
+        Gtk.Scale.set_digits(dp1, 0)
+        dp1.connect('button-release-event', self.set_dpi, "3")
+        grid.attach(dp1, 1, 13, 3, 1)
+        self.dp3 = dp1
+
+        dp1a = Gtk.Adjustment(1000, 50, 7200, 1, 10, 0)
+        dp1 = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=dp1a)
+        dp1.set_value(7200)
+        Gtk.Scale.set_digits(dp1, 0)
+        dp1.connect('button-release-event', self.set_dpi, "4")
+        grid.attach(dp1, 1, 14, 3, 1)
+        self.dp4 = dp1
+
         self.radio11 = radio11
         self.radio3 = radio3
         self.radio6 = radio6
@@ -186,12 +245,21 @@ class GridWindow(Gtk.Window):
 
         self.set_defaults()
 
+    def set_dpi(self, scale, event, name):
+
+        profile.set_dpi(int(scale.get_value()), int(name) - 1)
+
     def set_defaults(self):
 
         Gtk.RadioButton.set_active(self.radio11, True)
         Gtk.RadioButton.set_active(self.radio3, True)
         Gtk.RadioButton.set_active(self.radio6, True)
         Gtk.RadioButton.set_active(self.radio8, True)
+
+        self.dp1.set_value(1000)
+        self.dp2.set_value(2000)
+        self.dp3.set_value(3600)
+        self.dp4.set_value(7300)
 
     def reset_device(self, button):
         self.set_defaults()
